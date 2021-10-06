@@ -1,0 +1,44 @@
+version: "1"
+services:
+  website:
+    image: php:apache
+    container_name: 'website'
+    restart: 'always'
+    hostname: website
+    depends_on:
+      - api
+    environment:
+      - PASSWORD=python
+      - USERNAME=toto
+    ports:
+      - "80:80"
+    volumes:
+      - ./website:/var/www/html
+    networks:
+      - pozos_network
+    deploy:
+      mode: replicated
+      replicas: 2
+      placement:
+        constraints: [node.role == worker]
+
+  api:
+    image: simpleapi:v1
+    container_name: 'simple-api'
+    build: './simple_api'
+    restart: 'always'
+    hostname: api
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+    volumes:
+      - ./simple_api/student_age.json:/data/student_age.json
+    ports:
+      - "5000:5000"
+    networks:
+      - pozos_network
+
+networks:
+  pozos_network:
