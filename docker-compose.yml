@@ -16,29 +16,36 @@ services:
       - ./website:/var/www/html
     networks:
       - pozos_network
-    deploy:
-      mode: replicated
-      replicas: 2
-      placement:
-        constraints: [node.role == worker]
-
+    
   api:
     image: simpleapi:v1
     container_name: 'simple-api'
     build: './simple_api'
     restart: 'always'
     hostname: api
-    deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints: [node.role == manager]
     volumes:
       - ./simple_api/student_age.json:/data/student_age.json
     ports:
       - "5000:5000"
     networks:
       - pozos_network
-
+ 
+  private_registry1:
+    image : registry:2
+    ports:
+      - 5001:5000
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+  registry-ui1:
+    image: joxit/docker-registry-ui:static
+    depends_on:
+      - private_registry1
+    ports:
+      - 8050:80
+    environment:
+      - REGISTRY_URL=http://private_registry1:5000
+      - DELETES_IMAGES=true
+      - REGISTRY_TITLE=Flavien
+   
 networks:
   pozos_network:
